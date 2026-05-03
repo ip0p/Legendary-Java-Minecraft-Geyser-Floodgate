@@ -225,7 +225,7 @@ else
         # Update DHSupport (server-side Distant Horizons companion plugin) from GitLab
         echo "Updating DHSupport from GitLab..."
         DHGitLabProject="distant-horizons-team%2Fdhsupport"
-        DHReleaseInfo=$(curl -s -H "Accept-Encoding: identity" -H "Accept-Language: en" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" "https://gitlab.com/api/v4/projects/${DHGitLabProject}/releases" 2>/dev/null)
+        DHReleaseInfo=$(curl -s -H "Accept-Encoding: identity" -H "Accept-Language: en" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" "https://gitlab.com/api/v4/projects/${DHGitLabProject}/releases?per_page=1" 2>/dev/null)
         DHFileURL=$(echo "$DHReleaseInfo" | jq -r '[.[0].assets.links[] | select(.url | test("(?i)\\.jar"))][0].url' 2>/dev/null)
         if [ -z "$DHFileURL" ] || [ "$DHFileURL" = "null" ]; then
             DHFileURL=$(echo "$DHReleaseInfo" | jq -r '.[0].assets.links[0].url' 2>/dev/null)
