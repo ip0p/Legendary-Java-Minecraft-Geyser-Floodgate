@@ -225,14 +225,38 @@ else
         # Update DHSupport (server-side Distant Horizons companion plugin) from GitLab
         echo "Updating DHSupport from GitLab..."
         DHGitLabProject="distant-horizons-team%2Fdhsupport"
-        DHReleaseInfo=$(curl -s -H "Accept-Encoding: identity" -H "Accept-Language: en" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" "https://gitlab.com/api/v4/projects/${DHGitLabProject}/releases?per_page=1" 2>/dev/null)
-        DHFileURL=$(echo "$DHReleaseInfo" | jq -r '[.[0].assets.links[] | select(.url | test("(?i)\\.jar"))][0].url' 2>/dev/null)
-        if [ -z "$DHFileURL" ] || [ "$DHFileURL" = "null" ]; then
-            DHFileURL=$(echo "$DHReleaseInfo" | jq -r '.[0].assets.links[0].url' 2>/dev/null)
-        fi
-        if [[ -n "$DHFileURL" && "$DHFileURL" != "null" ]]; then
+        DHFileURL=""
+        DHVersion=""
+
+        # Try GitLab Releases API first; prefer direct_asset_url (GitLab-proxied) over url
+        DHReleaseInfo=$(curl -s -L -H "Accept-Encoding: identity" -H "Accept-Language: en" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" "https://gitlab.com/api/v4/projects/${DHGitLabProject}/releases?per_page=1" 2>/dev/null)
+        if [[ -n "$DHReleaseInfo" ]]; then
+            DHFileURL=$(echo "$DHReleaseInfo" | jq -r '[.[0].assets.links[] | select((.direct_asset_url // .url) | test("(?i)\\.jar"))][0] | (.direct_asset_url // .url)' 2>/dev/null)
+            if [[ -z "$DHFileURL" || "$DHFileURL" = "null" ]]; then
+                DHFileURL=$(echo "$DHReleaseInfo" | jq -r '.[0].assets.links[0] | (.direct_asset_url // .url)' 2>/dev/null)
+            fi
             DHVersion=$(echo "$DHReleaseInfo" | jq -r '.[0].tag_name' 2>/dev/null)
-            echo "Downloading DHSupport $DHVersion from GitLab..."
+        fi
+
+        # Fall back to GitLab Packages API if releases yielded no usable URL
+        if [[ -z "$DHFileURL" || "$DHFileURL" = "null" ]]; then
+            echo "No release asset link found, trying GitLab Packages API..."
+            DHPkgInfo=$(curl -s -L -H "Accept-Encoding: identity" -H "Accept-Language: en" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" "https://gitlab.com/api/v4/projects/${DHGitLabProject}/packages?package_type=generic&order_by=created_at&sort=desc&per_page=1" 2>/dev/null)
+            DHPkgId=$(echo "$DHPkgInfo" | jq -r '.[0].id' 2>/dev/null)
+            DHPkgName=$(echo "$DHPkgInfo" | jq -r '.[0].name' 2>/dev/null)
+            DHPkgVersion=$(echo "$DHPkgInfo" | jq -r '.[0].version' 2>/dev/null)
+            if [[ -n "$DHPkgId" && "$DHPkgId" != "null" ]]; then
+                DHPkgFiles=$(curl -s -L -H "Accept-Encoding: identity" -H "Accept-Language: en" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" "https://gitlab.com/api/v4/projects/${DHGitLabProject}/packages/${DHPkgId}/package_files" 2>/dev/null)
+                DHFileName=$(echo "$DHPkgFiles" | jq -r '[.[] | select(.file_name | test("(?i)\\.jar"))][0].file_name' 2>/dev/null)
+                if [[ -n "$DHFileName" && "$DHFileName" != "null" ]]; then
+                    DHFileURL="https://gitlab.com/api/v4/projects/${DHGitLabProject}/packages/generic/${DHPkgName}/${DHPkgVersion}/${DHFileName}"
+                    DHVersion="$DHPkgVersion"
+                fi
+            fi
+        fi
+
+        if [[ -n "$DHFileURL" && "$DHFileURL" != "null" ]]; then
+            echo "Downloading DHSupport ${DHVersion:-latest} from GitLab..."
             if [ -z "$QuietCurl" ]; then
                 curl -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/plugins/DHSupport.jar "$DHFileURL"
             else
