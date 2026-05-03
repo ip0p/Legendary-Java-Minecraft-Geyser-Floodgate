@@ -231,7 +231,7 @@ else
         fi
         # Update DHSupport (server-side Distant Horizons companion plugin) from Modrinth
         echo "Updating DHSupport..."
-        DHVersionInfo=$(curl -s "https://api.modrinth.com/v2/project/dhsupport/version" 2>/dev/null)
+        DHVersionInfo=$(curl -s -H "Accept-Encoding: identity" -H "Accept-Language: en" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" "https://api.modrinth.com/v2/project/dhsupport/version?game_versions=%5B%22${Version}%22%5D" 2>/dev/null)
         DHFileURL=$(echo "$DHVersionInfo" | jq -r '[.[0].files[] | select(.primary == true)][0].url' 2>/dev/null)
         if [ -z "$DHFileURL" ] || [ "$DHFileURL" = "null" ]; then
             DHFileURL=$(echo "$DHVersionInfo" | jq -r '.[0].files[0].url' 2>/dev/null)
