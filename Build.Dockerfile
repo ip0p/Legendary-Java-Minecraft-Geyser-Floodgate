@@ -41,6 +41,9 @@ ENV NoViaVersion=""
 # Optional switch to use ViaVersion snapshot from Jenkins CI instead of stable GitHub releases
 ENV ViaVersionSnapshot=""
 
+# Optional switch to disable Distant Horizons
+ENV NoDistantHorizons=""
+
 # IPV4 Ports
 EXPOSE 25565/tcp
 EXPOSE 19132/tcp

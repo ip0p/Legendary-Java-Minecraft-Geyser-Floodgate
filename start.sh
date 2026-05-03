@@ -223,6 +223,30 @@ else
     else
         echo "ViaVersion is disabled -- skipping"
     fi
+
+    if [ -z "$NoDistantHorizons" ]; then
+        # Update Distant Horizons from Modrinth
+        echo "Updating Distant Horizons..."
+        DHVersionInfo=$(curl -s "https://api.modrinth.com/v2/project/distanthorizons/version" 2>/dev/null)
+        # Prefer a server-only jar, fall back to the primary file
+        DHFileURL=$(echo "$DHVersionInfo" | jq -r '.[0].files[] | select(.filename | test("-server\\.jar$"; "i")) | .url' 2>/dev/null | head -1)
+        if [ -z "$DHFileURL" ] || [ "$DHFileURL" = "null" ]; then
+            DHFileURL=$(echo "$DHVersionInfo" | jq -r '[.[0].files[] | select(.primary == true)][0].url' 2>/dev/null)
+        fi
+        if [[ -n "$DHFileURL" && "$DHFileURL" != "null" ]]; then
+            DHVersion=$(echo "$DHVersionInfo" | jq -r '.[0].version_number' 2>/dev/null)
+            echo "Downloading Distant Horizons $DHVersion..."
+            if [ -z "$QuietCurl" ]; then
+                curl -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/plugins/DistantHorizons.jar "$DHFileURL"
+            else
+                curl --no-progress-meter -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/plugins/DistantHorizons.jar "$DHFileURL"
+            fi
+        else
+            echo "Unable to check for updates to Distant Horizons!"
+        fi
+    else
+        echo "Distant Horizons is disabled -- skipping"
+    fi
 fi
 
 # Accept EULA
