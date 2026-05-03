@@ -222,23 +222,24 @@ else
         if [ -f "/minecraft/plugins/DistantHorizons.jar" ]; then
             rm -f /minecraft/plugins/DistantHorizons.jar
         fi
-        # Update DHSupport (server-side Distant Horizons companion plugin) from Modrinth
-        echo "Updating DHSupport..."
-        DHVersionInfo=$(curl -s -H "Accept-Encoding: identity" -H "Accept-Language: en" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" "https://api.modrinth.com/v2/project/dhsupport/version?game_versions=%5B%22${Version}%22%5D" 2>/dev/null)
-        DHFileURL=$(echo "$DHVersionInfo" | jq -r '[.[0].files[] | select(.primary == true)][0].url' 2>/dev/null)
+        # Update DHSupport (server-side Distant Horizons companion plugin) from GitLab
+        echo "Updating DHSupport from GitLab..."
+        DHGitLabProject="distant-horizons-team%2Fdhsupport"
+        DHReleaseInfo=$(curl -s -H "Accept-Encoding: identity" -H "Accept-Language: en" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" "https://gitlab.com/api/v4/projects/${DHGitLabProject}/releases" 2>/dev/null)
+        DHFileURL=$(echo "$DHReleaseInfo" | jq -r '[.[0].assets.links[] | select(.url | test("(?i)\\.jar"))][0].url' 2>/dev/null)
         if [ -z "$DHFileURL" ] || [ "$DHFileURL" = "null" ]; then
-            DHFileURL=$(echo "$DHVersionInfo" | jq -r '.[0].files[0].url' 2>/dev/null)
+            DHFileURL=$(echo "$DHReleaseInfo" | jq -r '.[0].assets.links[0].url' 2>/dev/null)
         fi
         if [[ -n "$DHFileURL" && "$DHFileURL" != "null" ]]; then
-            DHVersion=$(echo "$DHVersionInfo" | jq -r '.[0].version_number' 2>/dev/null)
-            echo "Downloading DHSupport $DHVersion..."
+            DHVersion=$(echo "$DHReleaseInfo" | jq -r '.[0].tag_name' 2>/dev/null)
+            echo "Downloading DHSupport $DHVersion from GitLab..."
             if [ -z "$QuietCurl" ]; then
                 curl -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/plugins/DHSupport.jar "$DHFileURL"
             else
                 curl --no-progress-meter -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/plugins/DHSupport.jar "$DHFileURL"
             fi
         else
-            echo "Unable to check for updates to DHSupport!"
+            echo "Unable to check for updates to DHSupport from GitLab!"
         fi
     else
         echo "Distant Horizons (DHSupport) is disabled -- skipping"
