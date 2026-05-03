@@ -6,7 +6,7 @@
 FROM ubuntu:rolling
 
 # Fetch dependencies
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt-get install openjdk-25-jre-headless tzdata sudo curl unzip net-tools gawk openssl findutils pigz libc6 libcrypt1 apt-utils libcurl4-openssl-dev ca-certificates binfmt-support nano jq -yqq && rm -rf /var/cache/apt/*
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt-get install openjdk-25-jre tzdata sudo curl unzip net-tools gawk openssl findutils pigz libc6 libcrypt1 apt-utils libcurl4-openssl-dev ca-certificates binfmt-support nano jq -yqq && rm -rf /var/cache/apt/*
 
 # Set port environment variable
 ENV Port=25565
