@@ -1,7 +1,7 @@
-# Legendary Java Minecraft + Geyser + Floodgate + Paper Dedicated Server for Docker
+# Legendary Java Minecraft + Geyser + Floodgate + Purpur Dedicated Server for Docker
 <img src="https://jamesachambers.com/wp-content/uploads/2022/08/Minecraft-Geyser-Docker-Container-1024x576.webp" alt="Legendary Minecraft Geyser Container">
 
-This is the Docker containerized version of my <a href="https://github.com/TheRemote/RaspberryPiMinecraft">Minecraft Java Paper Dedicated Server for Linux/Raspberry Pi</a> scripts but with Geyser and Floodgate included.
+This is the Docker containerized version of my <a href="https://github.com/TheRemote/RaspberryPiMinecraft">Minecraft Java Purpur Dedicated Server for Linux/Raspberry Pi</a> scripts but with Geyser and Floodgate included.
 
 Geyser and Floodgate allow Minecraft Bedrock players to join your Java server!
 
@@ -15,10 +15,10 @@ The <a href="https://github.com/TheRemote/Legendary-Bedrock-Container" target="_
 <h2>Features</h2>
 <ul>
   <li>Sets up fully operational Minecraft server that allows both Java and Bedrock clients to connect</li>
-  <li>Runs the highly efficient "Paper" Minecraft server</li>
+  <li>Runs the highly efficient "Purpur" Minecraft server</li>
   <li>Runs Geyser to allow Bedrock clients to connect and Floodgate to allow them to authenticate with their Bedrock credentials to a Java server</li>
   <li>Uses named Docker volume for safe and easy to access storage of server data files (which enables more advanced Docker features such as automatic volume backups)</li>
-  <li>Plugin support for Paper + Spigot + Bukkit</li>
+  <li>Plugin support for Purpur + Paper + Spigot + Bukkit</li>
   <li>Installs and configures OpenJDK</li>
   <li>Automatic backups to minecraft/backups when server restarts</li>
   <li>Updates automatically to the latest version when server is started</li>
@@ -37,7 +37,7 @@ With default ports:
 <pre>docker run -it -v yourvolumename:/minecraft -p 25565:25565 -p 19132:19132/udp -p 19132:19132 --restart unless-stopped 05jchambers/legendary-minecraft-geyser-floodgate:latest</pre>
 With custom ports (this example uses 12345 for the Java port and 54321 for the Bedrock port):
 <pre>docker run -it -v yourvolumename:/minecraft -p 12345:12345 -e Port=12345 -p 54321:54321/udp -p 54321:54321 -e BedrockPort=54321 --restart unless-stopped 05jchambers/legendary-minecraft-geyser-floodgate:latest</pre>
-With a custom Minecraft version (add -e Version=1.X.X, must be present on Paper's API servers to work):
+With a custom Minecraft version (add -e Version=1.X.X, must be present on Purpur's API servers to work):
 <pre>docker run -it -v yourvolumename:/minecraft -p 25565:25565 -p 19132:19132/udp -p 19132:19132 -e Version=1.17.1 --restart unless-stopped 05jchambers/legendary-minecraft-geyser-floodgate:latest</pre>
 With a maximum memory limit in megabytes (optional, prevents crashes on platforms with limited memory, -e MaxMemory=2048):
 <pre>docker run -it -v yourvolumename:/minecraft -p 25565:25565 -p 19132:19132/udp -p 19132:19132 -e MaxMemory=2048 --restart unless-stopped 05jchambers/legendary-minecraft-geyser-floodgate:latest</pre>

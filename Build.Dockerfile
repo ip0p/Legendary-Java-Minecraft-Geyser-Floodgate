@@ -1,4 +1,4 @@
-# Minecraft Java Paper Server + Geyser + Floodgate Docker Container
+# Minecraft Java Purpur Server + Geyser + Floodgate Docker Container
 # Author: James A. Chambers - https://jamesachambers.com/minecraft-java-bedrock-server-together-geyser-floodgate/
 # GitHub Repository: https://github.com/TheRemote/Legendary-Java-Minecraft-Geyser-Floodgate
 
