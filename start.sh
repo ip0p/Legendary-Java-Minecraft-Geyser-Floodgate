@@ -1,5 +1,5 @@
 #!/bin/bash
-# Legendary Paper Minecraft Java Server Docker + Geyser/Floodgate server startup script
+# Legendary Purpur Minecraft Java Server Docker + Geyser/Floodgate server startup script
 # Author: James A. Chambers - https://jamesachambers.com/minecraft-java-bedrock-server-together-geyser-floodgate/
 # GitHub Repository: https://github.com/TheRemote/Legendary-Java-Minecraft-Geyser-Floodgate
 
@@ -17,7 +17,7 @@ if [ "$(id -u)" = '0' ]; then
     exec su minecraft -c "$0 $@"
 fi
 
-echo "Paper Minecraft Java Server Docker + Geyser/Floodgate script by James A. Chambers"
+echo "Purpur Minecraft Java Server Docker + Geyser/Floodgate script by James A. Chambers"
 echo "Latest version always at https://github.com/TheRemote/Legendary-Java-Minecraft-Geyser-Floodgate"
 echo "Don't forget to set up port forwarding on your router!  The default port is 25565 and the Bedrock port is 19132"
 
@@ -92,7 +92,7 @@ fi
 if [ -d "world" ]; then
     if [ -n "$(which pigz)" ]; then
         echo "Backing up server (all cores) to cd minecraft/backups folder"
-        tarArgs=(-I pigz --exclude='./backups' --exclude='./cache' --exclude='./logs' --exclude='./paperclip.jar')
+        tarArgs=(-I pigz --exclude='./backups' --exclude='./cache' --exclude='./logs' --exclude='./purpur.jar')
         IFS=','
         read -ra ADDR <<< "$NoBackup"
         for i in "${ADDR[@]}"; do
@@ -102,7 +102,7 @@ if [ -d "world" ]; then
         tar "${tarArgs[@]}"
     else
         echo "Backing up server (single core, pigz not found) to cd minecraft/backups folder"
-        tarArgs=(--exclude='./backups' --exclude='./cache' --exclude='./logs' --exclude='./paperclip.jar')
+        tarArgs=(--exclude='./backups' --exclude='./cache' --exclude='./logs' --exclude='./purpur.jar')
         IFS=','
         read -ra ADDR <<< "$NoBackup"
         for i in "${ADDR[@]}"; do
@@ -140,38 +140,31 @@ if [ ! -e "/minecraft/plugins/Geyser-Spigot/config.yml" ]; then
 fi
 
 # Test internet connectivity first
-# Update paperclip.jar
-echo "Updating to most recent paperclip version ..."
+# Update purpur.jar
+echo "Updating to most recent Purpur version ..."
 
 # Test internet connectivity first
 if [ -z "$QuietCurl" ]; then
-    curl -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -s https://papermc.io -o /dev/null
+    curl -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -s https://purpurmc.org -o /dev/null
 else
-    curl --no-progress-meter -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -s https://papermc.io -o /dev/null
+    curl --no-progress-meter -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -s https://purpurmc.org -o /dev/null
 fi
 
 if [ "$?" != 0 ]; then
     echo "Unable to connect to update website (internet connection may be down).  Skipping update ..."
 else
-    # Get latest build using PaperMC API v3
-    Build=$(curl -s -L "https://fill.papermc.io/v3/projects/paper/versions/$Version" | jq -r '.builds[0]' 2>/dev/null)
+    # Get latest build using Purpur API
+    Build=$(curl -s -L "https://api.purpurmc.org/v2/purpur/$Version" | jq -r '.builds.latest' 2>/dev/null)
     if [[ -n "$Build" && "$Build" != "null" ]]; then
-        echo "Latest paperclip build found: $Build"
-        # Get the SHA256 hash and filename for the download URL (pipe directly to avoid newline issues in commit messages)
-        SHA256=$(curl -s -L "https://fill.papermc.io/v3/projects/paper/versions/$Version/builds/$Build" | jq -r '.downloads["server:default"].checksums.sha256' 2>/dev/null)
-        FileName="paper-$Version-$Build.jar"
-        if [[ -n "$SHA256" && "$SHA256" != "null" ]]; then
-            echo "Downloading Paper $Version build $Build..."
-            if [ -z "$QuietCurl" ]; then
-                curl -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/paperclip.jar "https://fill-data.papermc.io/v1/objects/$SHA256/$FileName"
-            else
-                curl --no-progress-meter -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/paperclip.jar "https://fill-data.papermc.io/v1/objects/$SHA256/$FileName"
-            fi
+        echo "Latest Purpur build found: $Build"
+        echo "Downloading Purpur $Version build $Build..."
+        if [ -z "$QuietCurl" ]; then
+            curl -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/purpur.jar "https://api.purpurmc.org/v2/purpur/$Version/$Build/download"
         else
-            echo "Unable to retrieve download info for Paper build $Build"
+            curl --no-progress-meter -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/purpur.jar "https://api.purpurmc.org/v2/purpur/$Version/$Build/download"
         fi
     else
-        echo "Unable to retrieve latest Paper build (got result of $Build)"
+        echo "Unable to retrieve latest Purpur build (got result of $Build)"
     fi
 
     # Update Floodgate
@@ -225,7 +218,7 @@ else
     fi
 
     if [ -z "$NoDistantHorizons" ]; then
-        # Remove old DistantHorizons mod jar if present (it is not a Paper plugin)
+        # Remove old DistantHorizons mod jar if present (it is not a Purpur plugin)
         if [ -f "/minecraft/plugins/DistantHorizons.jar" ]; then
             rm -f /minecraft/plugins/DistantHorizons.jar
         fi
@@ -267,9 +260,9 @@ fi
 echo "Starting Minecraft server..."
 
 if [[ -z "$MaxMemory" ]] || [[ "$MaxMemory" -le 0 ]]; then
-    exec java -XX:+UnlockDiagnosticVMOptions -XX:-UseAESCTRIntrinsics -DPaper.IgnoreJavaVersion=true -Xms400M -jar /minecraft/paperclip.jar
+    exec java -XX:+UnlockDiagnosticVMOptions -XX:-UseAESCTRIntrinsics -DPaper.IgnoreJavaVersion=true -Xms400M -jar /minecraft/purpur.jar
 else
-    exec java -XX:+UnlockDiagnosticVMOptions -XX:-UseAESCTRIntrinsics -DPaper.IgnoreJavaVersion=true -Xms400M -Xmx${MaxMemory}M -jar /minecraft/paperclip.jar
+    exec java -XX:+UnlockDiagnosticVMOptions -XX:-UseAESCTRIntrinsics -DPaper.IgnoreJavaVersion=true -Xms400M -Xmx${MaxMemory}M -jar /minecraft/purpur.jar
 fi
 
 # Exit container
