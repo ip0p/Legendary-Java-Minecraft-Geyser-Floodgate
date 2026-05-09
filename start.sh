@@ -276,9 +276,49 @@ AcceptEULA=$(echo eula=true >eula.txt)
 # Change ports in server.properties
 sed -i "/server-port=/c\server-port=$Port" /minecraft/server.properties
 sed -i "/query\.port=/c\query\.port=$Port" /minecraft/server.properties
-# Change Bedrock port in Geyser config
-if [ -e /minecraft/plugins/Geyser-Spigot/config.yml ]; then
-    sed -i -z "s/  port: [0-9]*/  port: $BedrockPort/" /minecraft/plugins/Geyser-Spigot/config.yml
+# Configure Phantom for LAN discovery and set Geyser port accordingly
+if [ -z "$NoPhantom" ]; then
+    # Phantom occupies BedrockPort for LAN discovery; Geyser uses BedrockPort+1 internally
+    GeyserBedrockPort=$((BedrockPort + 1))
+
+    # Update Geyser config to use internal port
+    if [ -e /minecraft/plugins/Geyser-Spigot/config.yml ]; then
+        sed -i -z "s/  port: [0-9]*/  port: $GeyserBedrockPort/" /minecraft/plugins/Geyser-Spigot/config.yml
+    fi
+
+    # Detect CPU architecture to pick correct Phantom binary
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        x86_64)  PHANTOM_ARCH="amd64" ;;
+        aarch64) PHANTOM_ARCH="arm64" ;;
+        armv*)   PHANTOM_ARCH="arm" ;;
+        *)       PHANTOM_ARCH="amd64" ;;
+    esac
+
+    echo "Downloading Phantom for LAN discovery (arch: $PHANTOM_ARCH)..."
+    if [ -z "$QuietCurl" ]; then
+        curl -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/downloads/phantom "https://github.com/jhead/phantom/releases/latest/download/phantom-linux-$PHANTOM_ARCH"
+    else
+        curl --no-progress-meter -H "Accept-Encoding: identity" -H "Accept-Language: en" -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4.212 Safari/537.36" -o /minecraft/downloads/phantom "https://github.com/jhead/phantom/releases/latest/download/phantom-linux-$PHANTOM_ARCH"
+    fi
+
+    if [ -f "/minecraft/downloads/phantom" ] && [ -s "/minecraft/downloads/phantom" ]; then
+        chmod +x /minecraft/downloads/phantom
+        echo "Starting Phantom on port $BedrockPort (LAN discovery) proxying to localhost:$GeyserBedrockPort..."
+        /minecraft/downloads/phantom -server "127.0.0.1:$GeyserBedrockPort" -bind_port "$BedrockPort" &
+        echo "Phantom started with PID $!"
+    else
+        echo "Failed to download Phantom -- falling back to Geyser directly on port $BedrockPort"
+        if [ -e /minecraft/plugins/Geyser-Spigot/config.yml ]; then
+            sed -i -z "s/  port: [0-9]*/  port: $BedrockPort/" /minecraft/plugins/Geyser-Spigot/config.yml
+        fi
+    fi
+else
+    echo "Phantom disabled -- Geyser will listen directly on port $BedrockPort"
+    # Change Bedrock port in Geyser config
+    if [ -e /minecraft/plugins/Geyser-Spigot/config.yml ]; then
+        sed -i -z "s/  port: [0-9]*/  port: $BedrockPort/" /minecraft/plugins/Geyser-Spigot/config.yml
+    fi
 fi
 
 # Start server

@@ -44,6 +44,9 @@ ENV ViaVersionSnapshot=""
 # Optional switch to disable Distant Horizons (DHSupport plugin)
 ENV NoDistantHorizons=""
 
+# Optional switch to disable Phantom (LAN discovery for Bedrock clients)
+ENV NoPhantom=""
+
 # IPV4 Ports
 EXPOSE 25565/tcp
 EXPOSE 19132/tcp
